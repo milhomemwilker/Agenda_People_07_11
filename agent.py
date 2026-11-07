@@ -684,6 +684,7 @@ def executar_agente_rh(mensagem_usuario):
                 link_meet = agendar_entrevista_com_meet(
                     args["nome_candidato"], args["email_candidato"],
                     args["data_hora_inicio"], args["data_hora_fim"],
+                    vaga=args["vaga"],
                 )
             except Exception as erro:
                 resultado.append(("erro", f"Não foi possível concluir o agendamento: {erro}"))

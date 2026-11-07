@@ -64,6 +64,8 @@ class FluxoTest(unittest.TestCase):
             ("calendar", "https://meet.google.com/teste"), ("sheets", "Cadastro simulado")]) as executar:
             # Carrega a aplicação e executa sua renderização inicial.
             app = AppTest.from_file("main.py").run()
+            # Abre a página do assistente; a tela inicial agora é o dashboard.
+            app.radio(key="pagina").set_value("Assistente").run()
             # Preenche a primeira área de texto com uma solicitação fictícia.
             app.text_area[0].input("Solicitacao de teste")
             # Clica no primeiro botão e executa novamente a aplicação.

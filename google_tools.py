@@ -350,6 +350,7 @@ def agendar_entrevista_com_meet(
     email_candidato,
     data_hora_inicio,
     data_hora_fim,
+    vaga="",
 ):
     """
     Cria um evento no Google Calendar e solicita
@@ -477,6 +478,12 @@ def agendar_entrevista_com_meet(
             },
         },
     }
+
+    # Permite que o dashboard identifique a entrevista e exiba a vaga.
+    evento["extendedProperties"] = {"private": {
+        "people_entrevista": "1", "nome_candidato": nome_candidato,
+        "email_candidato": email_candidato, "vaga": vaga,
+    }}
 
     # Envia uma requisição para criar o evento.
     #

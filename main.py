@@ -3,7 +3,9 @@
 import os  # Verifica se os arquivos de configuração estão disponíveis.
 from pathlib import Path  # Encontra o CSS ao lado deste arquivo.
 
+from ui_helpers import legenda
 import streamlit as st  # Componentes visuais e estado da página.
+from dashboard import render_dashboard
 
 # Importamos o modelo, o ID da planilha e a função que processa pedidos.
 from agent import MODELO_GROQ, PLANILHA_ID, executar_agente_rh
@@ -29,7 +31,9 @@ planilha_configurada = bool(PLANILHA_ID)
 with st.sidebar:
     st.markdown('<div class="brand-mark">TALENT WORKSPACE</div>', unsafe_allow_html=True)
     st.markdown("## Central de RH")
-    st.caption("Assistente de recrutamento")
+    legenda("Assistente de recrutamento")
+    pagina = st.radio("Navegação", ["Agendamentos", "Assistente"], key="pagina", help="Agendamentos: consulte e gerencie entrevistas por formulário. Assistente: descreva em texto um pedido de agendamento ou cadastro.")
+    legenda("Agendamentos: visualizar, adicionar, editar e excluir. Assistente: enviar pedidos em texto e registrar candidatos na planilha.")
     st.divider()
 
     st.markdown("#### Integrações")
@@ -48,12 +52,19 @@ with st.sidebar:
             unsafe_allow_html=True
         )
         if not configurado:
-            st.caption(estado)
+            legenda(estado, cor="amarelo")
+    legenda("Verde: configuração encontrada.", cor="verde")
+    legenda("Amarelo: configuração pendente.", cor="amarelo")
+    legenda("A conexão é verificada ao usar o serviço.")
 
     st.divider()
-    st.caption("Modelo de IA")
+    legenda("Modelo de IA")
     st.code(MODELO_GROQ, language=None)
-    st.caption("Conectado via Groq Cloud")
+    legenda("O assistente usa este modelo pela Groq Cloud para interpretar seus pedidos.")
+
+if pagina == "Agendamentos":
+    render_dashboard()
+    st.stop()
 
 # A área principal apresenta o propósito da aplicação.
 st.markdown('<div class="eyebrow">OPERAÇÕES DE TALENT ACQUISITION</div>', unsafe_allow_html=True)
@@ -91,6 +102,13 @@ st.markdown(
     "quando aplicável. Ao agendar uma entrevista, o candidato também é registrado "
     "automaticamente na planilha."
 )
+with st.expander("O que posso pedir ao assistente?"):
+    st.markdown(
+        "- **Agendar uma entrevista:** informe nome, e-mail, vaga, data e horários de início e término. O pedido cria o convite e registra o candidato na planilha.\n"
+        "- **Cadastrar um candidato:** informe nome, e-mail e vaga. Você também pode indicar o status, como ‘Em análise’.\n"
+        "- **Editar ou excluir uma entrevista:** abra Agendamentos no menu lateral e selecione a entrevista."
+    )
+    legenda("Confira os dados antes de enviar. Ao processar um pedido completo, o assistente pode executar as ações e enviar convites aos participantes.", cor="amarelo")
 
 # O formulário só envia o texto quando o botão é pressionado.
 with st.form("solicitacao_recrutamento"):
@@ -98,16 +116,18 @@ with st.form("solicitacao_recrutamento"):
         "Instruções",
         key="prompt_input",
         height=150,
+        help="Escreva em linguagem natural. Se faltarem dados necessários, o assistente poderá pedi-los na resposta.",
         placeholder=(
-            "Ex.: Agende uma entrevista com nome@empresa.com em 30/10/2026, "
-            "das 14h às 15h, para a vaga de Analista Financeiro, e registre "
+            "Ex.: Agende uma entrevista com Ana Silva, ana@empresa.com, em 10/11/2026, "
+            "das 14h às 15h (horário de Brasília), para a vaga de Analista Financeiro, e registre "
             "o candidato na planilha."
         )
     )
     submitted = st.form_submit_button(
         "Processar solicitação",
         type="primary",
-        use_container_width=True
+        width="stretch",
+        key="processar_solicitacao"
     )
 
 # A variável submitted informa se o usuário enviou o formulário.
@@ -129,6 +149,7 @@ if submitted:
 # O resultado fica na sessão para continuar visível após a atualização da tela.
 if "resultado_processamento" in st.session_state:
     st.markdown("### Resultado da solicitação")
+    legenda("Confira o retorno de cada serviço. Se o convite foi criado e apenas o cadastro falhou, solicite somente o cadastro para evitar uma entrevista duplicada.")
     resultado = st.session_state.resultado_processamento
     # ERRO PROTEGIDO: algumas falhas podem devolver None.
     # CORREÇÃO: o aviso impede a interface de tentar percorrer
@@ -144,3 +165,4 @@ if "resultado_processamento" in st.session_state:
             st.info(conteudo)
         elif tipo == "erro":
             st.error(conteudo)
+

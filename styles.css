@@ -148,3 +148,20 @@ h2 {
 hr {
     border-color: var(--line);
 }
+
+/* Legendas: a cor reforça a mensagem, que continua explícita no texto. */
+.legenda {
+    padding: 0.7rem 0.9rem;
+    margin: 0.3rem 0 0.8rem;
+    border-left: 4px solid;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+
+.legenda strong { font-weight: 700; }
+.legenda--azul { background: #eaf1ff; color: #193c78; border-color: #3157d5; }
+.legenda--verde { background: #e6f5ed; color: #155536; border-color: #16834e; }
+.legenda--amarelo { background: #fff4d6; color: #704b00; border-color: #b77a00; }
+.legenda--vermelho { background: #fdebec; color: #8b202b; border-color: #c43443; }

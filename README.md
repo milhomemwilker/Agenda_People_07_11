@@ -1,86 +1,58 @@
 # Central de Recrutamento
 
-Aplicacao web desenvolvida com Streamlit para apoiar operacoes de recrutamento por meio de linguagem natural.
-
-A Central de Recrutamento utiliza um agente de IA da Groq para interpretar solicitacoes, criar entrevistas no Google Calendar com Google Meet e registrar candidatos em uma planilha Google Sheets.
+Aplicação Streamlit para gerenciar entrevistas no Google Calendar, criar links do Google Meet e cadastrar candidatos no Google Sheets com auxílio de um assistente de IA da Groq.
 
 ## Funcionalidades
 
-- Interface web responsiva em Streamlit.
-- Interpretacao de pedidos em linguagem natural com o modelo `openai/gpt-oss-20b`.
-- Agendamento de entrevistas no Google Calendar.
-- Criacao de sala Google Meet no convite.
-- Registro automatico de candidatos, vagas, status e horarios no Google Sheets.
-- Cadastro de candidato sem agendamento.
-- Preservacao do resultado do convite quando o registro na planilha falha.
-- Testes automatizados com mocks das APIs externas.
+### Dashboard de agendamentos
 
-## Tecnologias
+- Consulta de entrevistas por período, com data inicial e final incluídas.
+- Busca por nome, e-mail ou vaga entre as entrevistas carregadas.
+- Indicadores de entrevistas no filtro, entrevistas de hoje, próximas entrevistas e reuniões com Meet.
+- Tabela de agendamentos e gráfico de entrevistas por dia.
+- Criação de entrevistas com solicitação de link do Google Meet.
+- Edição de candidato, e-mail, vaga e datas e horários.
+- Exclusão com confirmação e solicitação de cancelamento aos participantes.
+- Proteção contra sobrescrever um evento alterado após a consulta.
+- Guias de uso, exemplos nos campos, dicas de ajuda e legendas dos indicadores.
 
-- Python
-- Streamlit
-- Groq OpenAI-compatible API
-- Google Calendar API
-- Google Sheets API
-- Google OAuth 2.0
-- `python-dotenv`
-- `unittest`
+### Assistente de recrutamento
 
-## Estrutura do projeto
+- Interpretação de pedidos em linguagem natural com o modelo `openai/gpt-oss-20b`, pela API da Groq.
+- Agendamento de entrevistas e cadastro automático do candidato na planilha.
+- Cadastro de candidatos sem criar uma entrevista.
+- Exibição separada dos resultados do calendário e da planilha, incluindo falhas parciais.
 
-```text
-.
-├── agent.py          # Configuracao do agente, modelo e ferramentas
-├── google_tools.py   # Autenticacao Google e integracoes com Calendar/Sheets
-├── main.py           # Interface Streamlit
-├── styles.css        # Estilos da interface
-├── test_fluxo.py     # Testes de fluxo e interface
-├── requirements.txt  # Dependencias Python
-└── README.md         # Documentacao do projeto
-```
+**Diferença entre as telas:** o dashboard gerencia os eventos do Google Calendar. Suas inclusões, edições e exclusões não atualizam os cadastros no Google Sheets. O registro de candidatos na planilha é feito pelo assistente.
 
 ## Requisitos
 
-- Python 3.10 ou superior.
-- Conta Groq com uma chave de API.
-- Conta Google.
-- Projeto configurado no Google Cloud.
-- Google Calendar API e Google Sheets API habilitadas.
-- Uma planilha Google Sheets para os candidatos.
+- Python 3.12 recomendado, versão utilizada na validação do projeto.
+- Conta Google com acesso ao calendário e à planilha desejados.
+- Credenciais OAuth para aplicativo de computador, com Google Calendar API e Google Sheets API habilitadas no projeto Google Cloud.
+- Chave de API da Groq para utilizar o assistente. O dashboard não utiliza a IA.
 
-## Instalacao
+## Instalação
 
-1. Clone o repositorio:
-
-```bash
-git clone https://github.com/seu-usuario/seu-repositorio.git
-cd seu-repositorio
-```
-
-2. Crie e ative um ambiente virtual:
-
-Windows:
+Abra o terminal na pasta do projeto. No Windows, usando PowerShell:
 
 ```powershell
 python -m venv .venv
-.venv\Scripts\Activate.ps1
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-Linux ou macOS:
+Os comandos usam diretamente o Python do ambiente virtual, sem precisar ativá-lo. Se o comando `python` não estiver disponível, instale o Python e reabra o terminal. Um ambiente virtual copiado de outro computador pode precisar ser recriado.
+
+No Linux ou macOS:
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate
+.venv/bin/python -m pip install -r requirements.txt
 ```
 
-3. Instale as dependencias:
+## Configuração
 
-```bash
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-## Configuracao da Groq
+### Variáveis de ambiente
 
 Crie um arquivo `.env` na raiz do projeto:
 
@@ -89,132 +61,162 @@ GROQ_API_KEY=sua_chave_da_groq
 PLANILHA_ID=id_da_sua_planilha_google
 ```
 
-O identificador da planilha aparece na URL:
+Em uma URL como `https://docs.google.com/spreadsheets/d/ID_DA_PLANILHA/edit`, copie somente o trecho `ID_DA_PLANILHA`.
+
+### Autorização Google
+
+1. No projeto Google Cloud, habilite as APIs Google Calendar e Google Sheets.
+2. Configure o consentimento OAuth e os usuários de teste, quando aplicável.
+3. Crie uma credencial OAuth do tipo aplicativo de computador e baixe seu JSON.
+4. Salve o arquivo como `credentials.json` na raiz do projeto.
+5. Garanta que a conta que será autorizada tenha permissão para editar a planilha.
+
+Na primeira operação que acessar o Google, o sistema poderá abrir o navegador para solicitar autorização. Após a autorização, o arquivo `token.json` é salvo para reutilizar o acesso. O calendário utilizado é o principal da conta autorizada.
+
+### Estrutura da planilha
+
+A implementação grava na aba cujo identificador numérico é **`sheetId=0`**. Essa aba precisa existir; não basta que uma aba qualquer seja a primeira visível na planilha.
+
+Os campos são identificados pelos cabeçalhos da primeira linha, entre as colunas A e Z. A comparação ignora acentos, espaços, pontuação e diferenças entre maiúsculas e minúsculas.
+
+| Campo | Exemplos de cabeçalhos reconhecidos |
+| --- | --- |
+| Nome | Nome, Nome Candidato |
+| E-mail | Email, E-mail, Email Candidato |
+| Vaga | Vaga, Cargo |
+| Status | Status, Situação |
+| Data | Data, Data Entrevista |
+| Hora | Hora, Horário, Horário Entrevista |
+
+Sugestão de cabeçalho:
 
 ```text
-https://docs.google.com/spreadsheets/d/ID_DA_PLANILHA/edit
+Nome | Email | Vaga | Status | Data Entrevista | Horário Entrevista
 ```
 
-Utilize apenas o trecho identificado como `ID_DA_PLANILHA`.
+Inclua todas essas colunas para registrar os dados completos. O programa grava apenas os campos cujas colunas forem reconhecidas.
 
-## Configuracao do Google
+## Executar a aplicação
 
-1. Acesse o Google Cloud Console.
-2. Crie um projeto ou selecione um projeto existente.
-3. Habilite:
-   - Google Calendar API
-   - Google Sheets API
-4. Configure uma tela de consentimento OAuth.
-5. Adicione sua conta Google como usuario de teste, quando necessario.
-6. Crie uma credencial OAuth do tipo `Aplicativo para computador`.
-7. Baixe o arquivo JSON de credenciais.
-8. Renomeie o arquivo para `credentials.json` e coloque-o na raiz do projeto.
-9. Compartilhe a planilha com a conta Google que sera usada pela aplicacao.
+No Windows:
 
-Na primeira execucao, o navegador sera aberto para solicitar autorizacao de acesso ao:
-
-- Google Calendar.
-- Google Sheets.
-
-O arquivo `token.json` sera criado automaticamente apos a autorizacao.
-
-## Estrutura da planilha
-
-Na primeira aba da planilha, o sistema localiza os dados pelos nomes das colunas. Cabecalhos aceitos incluem:
-
-| Campo | Cabecalhos aceitos |
-|---|---|
-| Nome | `Nome`, `Nome Candidato` |
-| Vaga | `Vaga`, `Cargo` |
-| Email | `Email`, `E-mail`, `Email Candidato` |
-| Status | `Status`, `Situacao` |
-| Data | `Data`, `Data Entrevista` |
-| Hora | `Hora`, `Horario`, `Horario Entrevista` |
-
-Recomenda-se utilizar as seguintes colunas na primeira linha:
-
-```text
-Nome | Email | Vaga | Status | Data Entrevista | Horario Entrevista
+```powershell
+.\.venv\Scripts\python.exe -m streamlit run main.py
 ```
 
-## Execucao
-
-Execute a interface com:
+No Linux ou macOS:
 
 ```bash
-streamlit run main.py
+.venv/bin/python -m streamlit run main.py
 ```
 
-O Streamlit exibira o endereco local da aplicacao, normalmente `http://localhost:8501`.
+Abra o endereço exibido no terminal. A porta pode variar conforme a disponibilidade. Para definir uma porta específica, acrescente `--server.port=8502` ao comando.
 
-## Exemplos de solicitacoes
+## Como usar
 
-Agendar uma entrevista e registrar o candidato:
+### Consultar entrevistas
+
+1. Abra **Agendamentos** no menu lateral.
+2. Escolha a data inicial e a data final da consulta.
+3. Clique em **Atualizar agendamentos**.
+4. Use a busca para filtrar por candidato, e-mail ou vaga.
+
+Ao mudar o período, clique novamente em Atualizar agendamentos para buscar os dados do Google. A busca filtra somente os registros já carregados. A tabela, o gráfico e os indicadores acompanham os filtros.
+
+| Indicador | Significado |
+| --- | --- |
+| Entrevistas no filtro | Total de entrevistas no resultado atual |
+| Hoje | Entrevistas do resultado atual que começam hoje |
+| Próximas | Entrevistas do resultado atual cujo início ainda não chegou |
+| Com Google Meet | Entrevistas do resultado atual com link de reunião disponível |
+
+Todos os horários seguem **America/Sao_Paulo**, horário de Brasília. O painel reconhece entrevistas pelo título iniciado por `Entrevista com ` ou pela identificação interna adicionada pelo sistema. Eventos de dia inteiro não aparecem.
+
+### Adicionar uma entrevista
+
+Na aba **Adicionar entrevista**, preencha nome, e-mail, vaga e datas e horários de início e término. Confira os dados e clique em **Adicionar agendamento**. O término deve ser posterior ao início.
+
+O sistema cria o evento no Google Calendar, solicita o envio do convite aos participantes e solicita um link do Google Meet. O link pode levar alguns instantes para ficar disponível; atualize a agenda para consultá-lo.
+
+### Editar ou excluir
+
+Na aba **Editar ou excluir**, selecione a entrevista pela data, horário e nome.
+
+- Para editar, altere os campos e clique em **Salvar alterações**. As mudanças só são enviadas ao salvar.
+- Para excluir, abra **Excluir agendamento**, confira a entrevista selecionada, marque a confirmação e clique em **Excluir definitivamente**. A tela não oferece desfazer.
+- Para acessar a reunião, use **Abrir Google Meet**, quando o link estiver disponível.
+
+As operações solicitam notificações aos participantes. Em eventos recorrentes, a edição ou exclusão afeta apenas a ocorrência selecionada. Se o evento tiver sido alterado desde a consulta, atualize a lista antes de tentar novamente.
+
+### Enviar pedidos ao assistente
+
+Abra **Assistente** no menu lateral, descreva o pedido e clique em **Processar solicitação**. Um pedido completo pode executar as ações e enviar convites imediatamente.
+
+Exemplo de agendamento com cadastro na planilha:
 
 ```text
-Agende uma entrevista com Maria Silva, maria@email.com, para a vaga de Analista Financeiro
-no dia 10/11/2026 das 14h as 15h.
+Agende uma entrevista com Ana Silva, ana@example.com, para a vaga de Analista Financeiro,
+no dia 10/11/2026, das 14h às 15h, no horário de Brasília.
 ```
 
-Registrar apenas um candidato:
+Exemplo de cadastro sem entrevista:
 
 ```text
-Cadastre Joao Souza, joao@email.com, para a vaga de Desenvolvedor Python com status Cadastrado.
+Cadastre João Souza, joao@example.com, para a vaga de Desenvolvedor Python,
+com status Em análise.
+```
+
+Se o convite for criado, mas o cadastro na planilha falhar, solicite **apenas o cadastro** para evitar duplicar a entrevista. Após agendar pelo assistente, volte ao dashboard e atualize a lista.
+
+### Legenda das integrações
+
+Na barra lateral, verde significa que a configuração foi encontrada; amarelo indica configuração pendente. Esses indicadores não comprovam que a conexão funciona: o acesso é verificado ao usar o serviço.
+
+## Estrutura do projeto
+
+```text
+.
+├── main.py           # Interface principal, navegação e tela do assistente
+├── dashboard.py      # Dashboard, filtros, indicadores e formulários
+├── agenda_service.py # Consulta, criação, edição e exclusão no Calendar
+├── agent.py          # Cliente Groq, instruções e execução de ferramentas
+├── google_tools.py   # OAuth Google, agendamento e cadastro no Sheets
+├── styles.css        # Estilos da interface
+├── test_dashboard.py # Testes do dashboard e das operações de agenda
+├── test_fluxo.py     # Testes do fluxo do assistente e da interface
+├── requirements.txt  # Dependências Python
+└── README.md         # Documentação
 ```
 
 ## Testes
 
-Os testes simulam o agente e as integracoes externas, portanto nao criam convites reais nem alteram a planilha configurada.
+No Windows:
 
-Execute:
+```powershell
+.\.venv\Scripts\python.exe -m unittest test_dashboard test_fluxo -v
+```
+
+No Linux ou macOS:
 
 ```bash
-python -m unittest test_fluxo.py
+.venv/bin/python -m unittest test_dashboard test_fluxo -v
 ```
 
-## Seguranca
+A suíte atual contém 10 testes que usam integrações simuladas e `AppTest` do Streamlit. Eles cobrem listagem paginada, filtros, criação, edição, exclusão com confirmação, validação de horários e falhas parciais. Não criam convites reais nem alteram a planilha. Essa validação não substitui verificar as permissões da conta Google utilizada.
 
-Nunca envie para o GitHub:
+## Cuidados com os dados
 
-- `.env`
-- `credentials.json`
-- `token.json`
-- Chaves de API
-- Tokens OAuth
-- Dados pessoais de candidatos
-- Ambientes virtuais
+Mantenha `.env`, `credentials.json`, `token.json` e ambientes virtuais fora do controle de versão. Esses caminhos já constam no `.gitignore`. Não publique dados pessoais de candidatos. Se uma credencial for exposta, revogue-a no provedor.
 
-Adicione ao `.gitignore`:
+## Solução de problemas
 
-```gitignore
-.env
-credentials.json
-token.json
-.venv/
-.venv.backup*/
-__pycache__/
-*.py[cod]
-```
-
-Se uma credencial for publicada por engano, revogue-a imediatamente no provedor e gere outra.
-
-## Limitacoes
-
-- Os horarios devem ser informados em um formato compreendido pelo agente.
-- O sistema utiliza o calendario principal da conta Google autenticada.
-- A planilha precisa possuir a primeira aba como aba de destino.
-- Os nomes das colunas devem corresponder aos campos reconhecidos pelo programa.
-- A criacao do link do Meet pode ser assincrona; o Google pode indicar inicialmente que o link ainda esta sendo gerado.
-
-## Contribuicoes
-
-Contribuicoes sao bem-vindas. Para uma mudanca:
-
-1. Crie uma branch.
-2. Implemente e documente a alteracao.
-3. Execute os testes.
-4. Abra um Pull Request.
-
-## Licenca
-
-Defina neste repositorio a licenca desejada antes da publicacao. Para uso academico ou pessoal, uma licenca como MIT pode ser apropriada, desde que revise as exigencias do seu contexto.
+| Situação | O que verificar |
+| --- | --- |
+| Python não encontrado ou erro ao abrir o `.venv` | Instalação do Python e recriação do ambiente virtual |
+| Agenda vazia | Período, texto da busca, conta autorizada e identificação dos eventos como entrevistas |
+| Vaga não informada | Entrevistas antigas podem não ter esse dado; preencha a vaga ao editar |
+| Meet em branco | Atualize a agenda; o link pode estar sendo gerado ou o evento pode não ter videoconferência |
+| Falha de autorização | Permissões da conta Google, credenciais OAuth e APIs habilitadas |
+| Aba da planilha não encontrada | Existência da aba com `sheetId=0` e valor de `PLANILHA_ID` |
+| Evento alterado por outra pessoa | Atualize a agenda para carregar a versão mais recente antes de salvar ou excluir |
+| Falha somente no cadastro | Confira a planilha e solicite apenas o cadastro pelo assistente |
