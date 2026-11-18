@@ -220,3 +220,9 @@ Mantenha `.env`, `credentials.json`, `token.json` e ambientes virtuais fora do c
 | Aba da planilha não encontrada | Existência da aba com `sheetId=0` e valor de `PLANILHA_ID` |
 | Evento alterado por outra pessoa | Atualize a agenda para carregar a versão mais recente antes de salvar ou excluir |
 | Falha somente no cadastro | Confira a planilha e solicite apenas o cadastro pelo assistente |
+
+## Licença
+
+Este projeto é distribuído sob a **GNU General Public License, versão 3 (GPL-3.0-only)**. Consulte o texto completo em [LICENSE](LICENSE).
+
+Este programa é software livre: você pode redistribuí-lo e/ou modificá-lo sob os termos da GNU GPL versão 3, publicada pela Free Software Foundation. É distribuído sem qualquer garantia, conforme os termos da licença.
